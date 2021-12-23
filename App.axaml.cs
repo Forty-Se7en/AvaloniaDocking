@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using AvaloniaTestMVVM.Docking.View;
 using AvaloniaTestMVVM.ViewModels;
 using AvaloniaTestMVVM.Views;
 
@@ -19,9 +20,13 @@ namespace AvaloniaTestMVVM
             {
                 desktop.MainWindow = new MainWindow
                 {
-                    DataContext = new MainWindowViewModel(),
+                    DataContext = new MainWindowViewModel()
                 };
+
+                desktop.MainWindow.Content = new LayoutPanel(LayoutPanel.CreateRandomContent());
             }
+            
+            
 
             base.OnFrameworkInitializationCompleted();
         }

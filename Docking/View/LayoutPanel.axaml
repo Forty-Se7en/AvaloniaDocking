@@ -5,7 +5,23 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AvaloniaTestMVVM.Docking.View.LayoutPanel"
              >
+    
     <Grid x:Name="MainGrid">
-        <TabControl x:Name="MainTabControl"></TabControl>
+        <!--<TabControl x:Name="MainTabControl">
+           
+        </TabControl>-->
+        
+        <!-- <TabControl x:Name="MainTabControl" Items="{Binding}"> -->
+        <!--     <TabControl.ItemTemplate> -->
+        <!--         <DataTemplate> -->
+        <!--             <TextBlock Text="{Binding Title}" /> -->
+        <!--         </DataTemplate> -->
+        <!--     </TabControl.ItemTemplate> -->
+        <!--     ~1~ <TabControl.ContentTemplate> @1@ -->
+        <!--     ~1~     <DataTemplate> @1@ -->
+        <!--     ~1~         <Panel ></Panel> @1@ -->
+        <!--     ~1~     </DataTemplate> @1@ -->
+        <!--     ~1~ </TabControl.ContentTemplate> @1@ -->
+        <!-- </TabControl> -->
     </Grid>
 </UserControl>
