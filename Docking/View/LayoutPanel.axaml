@@ -6,7 +6,7 @@
              x:Class="AvaloniaTestMVVM.Docking.View.LayoutPanel"
              >
     
-    <Grid x:Name="MainGrid">
+    <!-- <Grid x:Name="MainGrid"> -->
         <!--<TabControl x:Name="MainTabControl">
            
         </TabControl>-->
@@ -23,5 +23,5 @@
         <!--     ~1~     </DataTemplate> @1@ -->
         <!--     ~1~ </TabControl.ContentTemplate> @1@ -->
         <!-- </TabControl> -->
-    </Grid>
+    <!-- </Grid> -->
 </UserControl>

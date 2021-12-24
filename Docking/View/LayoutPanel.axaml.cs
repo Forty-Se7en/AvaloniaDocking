@@ -24,8 +24,9 @@ namespace AvaloniaTestMVVM.Docking.View
         #region Fields
         
         private Grid _mainGrid;
+        private Grid _contentGrid;
         private TabControl _tabControl;
-        private TabItem _tabItem;
+        //private TabItem _tabItem;
         private GridSplitter _gridSplitter;
         
         private ContentViewModel _content;
@@ -54,17 +55,32 @@ namespace AvaloniaTestMVVM.Docking.View
         public LayoutPanel(object content)
         {
             InitializeComponent();
-            _mainGrid = this.FindControl<Grid>("MainGrid");
-            if (content is TabControl tabControl)
+            //_mainGrid = this.FindControl<Grid>("MainGrid");
+            _mainGrid = new Grid();
+            this.Content = _mainGrid;
+
+            if (content is Grid contentGrid)
+            {
+                _contentGrid = contentGrid;
+                _tabControl = (TabControl)_contentGrid.Children.First(c => c.Name == "tabControl");
+            }
+            else
+            {
+                _contentGrid = new Grid();
+            }
+            IControl
+            _mainGrid.Children.Add(_contentGrid);
+
+            /*if (content is TabControl tabControl)
             {
                 AddTabControl(tabControl);
-            }
-            else if (content is ContentViewModel contentViewModel)
+            }*/
+            if (content is ContentViewModel contentViewModel)
             {
                 AddTabControl();
                 AddContent(contentViewModel, EPosition.Center);
             }
-            
+
             AddContextMenu();
         }
 
@@ -100,19 +116,19 @@ namespace AvaloniaTestMVVM.Docking.View
         void AddTabControl(TabControl tabControl = null)
         {
             if (tabControl == null)
-                tabControl = new TabControl();
+                tabControl = new TabControl() {Name = "tabControl"};
             _tabControl = tabControl;
-            _mainGrid.Children.Add(_tabControl);
+            _contentGrid.Children.Add(_tabControl);
         }
         
         void InsertContent(ContentViewModel content)
         {
-            _tabItem = new TabItem();
-            _tabItem.Header = content.Title;
-            _tabItem.Content = content.Content;
+            var tabItem = new TabItem();
+            tabItem.Header = content.Title;
+            tabItem.Content = content.Content;
 
             var items = _tabControl.Items.Cast<object>().ToList();
-            items.Add(_tabItem);
+            items.Add(tabItem);
 
             _tabControl.Items = items;
 
@@ -177,7 +193,7 @@ namespace AvaloniaTestMVVM.Docking.View
 
             menu.Items = items;
             //_tabControl.ContextMenu = menu;
-            _mainGrid.ContextMenu = menu;
+            _contentGrid.ContextMenu = menu;
 
         }
 
@@ -191,22 +207,23 @@ namespace AvaloniaTestMVVM.Docking.View
             if (IsSplitted) return;
             if (position != EPosition.Bottom && position != EPosition.Top) return;
             
-            _mainGrid.Children.Remove(_tabControl);
-            _mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 1
-            _mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // for splitter
-            _mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 2
+            _mainGrid.Children.Remove(_contentGrid);
+            // _contentGrid.Children.Remove(_tabControl);
+            // _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 1
+            // _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // for splitter
+            // _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 2
 
             LayoutPanel topChild = null, bottomChild = null;
 
             if (position == EPosition.Top)
             {
                 topChild = new LayoutPanel(content);
-                bottomChild = new LayoutPanel(_tabControl);
+                bottomChild = new LayoutPanel(_contentGrid);
             }
             else if (position == EPosition.Bottom)
             {
                 bottomChild = new LayoutPanel(content);
-                topChild = new LayoutPanel(_tabControl);
+                topChild = new LayoutPanel(_contentGrid);
             }
             
             Child1 = topChild;
@@ -214,46 +231,56 @@ namespace AvaloniaTestMVVM.Docking.View
             Child1.Closed += ChildOnClosed;
             Grid.SetRow(Child1,0);
             Grid.SetColumn(Child1,0);
-            _mainGrid.Children.Add(Child1);
+            //_contentGrid.Children.Add(Child1);
 
             _gridSplitter = new GridSplitter() {HorizontalAlignment = HorizontalAlignment.Stretch, Height = 2, Background = Brushes.Aqua};
             Grid.SetRow(_gridSplitter,1);
             Grid.SetColumn(_gridSplitter,0);
-            _mainGrid.Children.Add(_gridSplitter);
+            //_contentGrid.Children.Add(_gridSplitter);
 
             Child2 = bottomChild;
             Child2.Parent = this;
             Child2.Closed += ChildOnClosed;
             Grid.SetRow(Child2,2);
             Grid.SetColumn(Child2,0);
-            _mainGrid.Children.Add(Child2);
+            //_contentGrid.Children.Add(Child2);
+            
+            _contentGrid = new Grid();
+            _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 1
+            _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // for splitter
+            _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 2
+            _contentGrid.Children.Add(Child1);
+            _contentGrid.Children.Add(_gridSplitter);
+            _contentGrid.Children.Add(Child2);
+            _mainGrid.Children.Add(_contentGrid);
 
             Orientation = EOrientation.Vertical;
             IsSplitted = true;
-            _mainGrid.ContextMenu.IsEnabled = false;
+            //_mainGrid.ContextMenu.IsEnabled = false;
         }
 
         void SplitHorizontal(ContentViewModel content, EPosition position)
         {
             if (IsSplitted) return;
             if (position != EPosition.Left && position != EPosition.Right) return;
-            
-            _mainGrid.Children.Remove(_tabControl);
-            _mainGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 1
-            _mainGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // for splitter
-            _mainGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 2
+
+            _mainGrid.Children.Remove(_contentGrid);
+            // _contentGrid.Children.Remove(_tabControl);
+            // _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 1
+            // _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // for splitter
+            // _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 2
             
             LayoutPanel leftChild = null, rightChild = null;
 
             if (position == EPosition.Left)
             {
                 leftChild = new LayoutPanel(content);
-                rightChild = new LayoutPanel(_tabControl);
+                rightChild = new LayoutPanel(_contentGrid);
             }
             else if (position == EPosition.Right)
             {
                 rightChild = new LayoutPanel(content);
-                leftChild = new LayoutPanel(_tabControl);
+                leftChild = new LayoutPanel(_contentGrid);
             }
             
             Child1 = leftChild;
@@ -261,69 +288,87 @@ namespace AvaloniaTestMVVM.Docking.View
             Child1.Closed += ChildOnClosed;
             Grid.SetRow(Child1,0);
             Grid.SetColumn(Child1,0);
-            _mainGrid.Children.Add(Child1);
+            //_contentGrid.Children.Add(Child1);
 
             _gridSplitter = new GridSplitter() {VerticalAlignment = VerticalAlignment.Stretch, Width = 2, Background = Brushes.Aqua};
             Grid.SetRow(_gridSplitter,0);
             Grid.SetColumn(_gridSplitter,1);
-            _mainGrid.Children.Add(_gridSplitter);
+            //_contentGrid.Children.Add(_gridSplitter);
             
             Child2 = rightChild;
             Child2.Parent = this;
             Child2.Closed += ChildOnClosed;
             Grid.SetRow(Child2,0);
             Grid.SetColumn(Child2,2);
-            _mainGrid.Children.Add(Child2);
+            //_contentGrid.Children.Add(Child2);
 
+            _contentGrid = new Grid();
+            _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 1
+            _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // for splitter
+            _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 2
+            _contentGrid.Children.Add(Child1);
+            _contentGrid.Children.Add(_gridSplitter);
+            _contentGrid.Children.Add(Child2);
+            _mainGrid.Children.Add(_contentGrid);
+            
             Orientation = EOrientation.Horizontal;
             IsSplitted = true;
-            _mainGrid.ContextMenu.IsEnabled = false;
+            //_mainGrid.ContextMenu.IsEnabled = false;
         }
 
         void ChildOnClosed(object sender)
         {
-            _mainGrid.Children.Remove(Child1);
-            _mainGrid.Children.Remove(Child2);
+            _contentGrid.Children.Remove(Child1);
+            _contentGrid.Children.Remove(Child2);
+            _contentGrid.Children.Clear();
+            _contentGrid.RowDefinitions.Clear();
+            _contentGrid.ColumnDefinitions.Clear();
+            
+            _mainGrid.Children.Remove(_contentGrid);
             _mainGrid.Children.Clear();
-            _mainGrid.RowDefinitions.Clear();
-            _mainGrid.ColumnDefinitions.Clear();
             
             Orientation = EOrientation.None;
             IsSplitted = false;
-            _mainGrid.ContextMenu.IsEnabled = true;
+            //_mainGrid.ContextMenu.IsEnabled = true;
 
             var child = (LayoutPanel)sender;
-            Child1.Closed -= this.ChildOnClosed;
+            Child1.Closed -= this.ChildOnClosed; 
             Child2.Closed -= this.ChildOnClosed;
             
-            
-            TabControl content = null;
+            //TabControl content = null;
+            Grid content2 = null;
             
             if (child == Child1)
             {
-                content = Child2.GetContent();
+                //content = Child2.GetContent();
+                content2 = Child2.GetContentGrid();
                 Child2.Close();
             }
             else if (child == Child2)
             {
-                content = Child1.GetContent();
+                //content = Child1.GetContent();
+                content2 = Child1.GetContentGrid();
                 Child1.Close();
             }
-            
-            
-            this.AddTabControl(content);
+
+            _contentGrid = content2;
+            _mainGrid.Children.Add(_contentGrid);
+            //this.AddTabControl(content);
         }
 
         void Close()
         {
-            _mainGrid.Children.Remove(_tabControl);
+            //_mainGrid.Children.Remove(_tabControl);
+            //_mainGrid.Children.Clear();
+            _mainGrid.Children.Remove(_contentGrid);
             _mainGrid.Children.Clear();
+            
             Closed?.Invoke(this);
         }
 
-        public TabControl GetContent()
+        public Grid GetContentGrid()
         {
-            return _tabControl;
+            return _contentGrid;
         }
         
 
