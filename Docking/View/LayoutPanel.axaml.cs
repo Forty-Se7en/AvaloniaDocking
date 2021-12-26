@@ -15,6 +15,8 @@ namespace AvaloniaTestMVVM.Docking.View
 {
     public class LayoutPanel : UserControl, ILayoutPanel
     {
+        private static int _index;
+
         #region Events
 
         public event Action<object> Closed;
@@ -23,11 +25,12 @@ namespace AvaloniaTestMVVM.Docking.View
         
         #region Fields
         
-        private Grid _mainGrid;
+        private readonly Grid _mainGrid;
         private Grid _contentGrid;
         private TabControl _tabControl;
         //private TabItem _tabItem;
         private GridSplitter _gridSplitter;
+        private Label _label; 
         
         private ContentViewModel _content;
 
@@ -68,8 +71,14 @@ namespace AvaloniaTestMVVM.Docking.View
             {
                 _contentGrid = new Grid();
             }
-            IControl
             _mainGrid.Children.Add(_contentGrid);
+            _label = new Label()
+            {
+                Content = "Layout " + _index++, 
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            _mainGrid.Children.Add(_label);
 
             /*if (content is TabControl tabControl)
             {
@@ -193,7 +202,7 @@ namespace AvaloniaTestMVVM.Docking.View
 
             menu.Items = items;
             //_tabControl.ContextMenu = menu;
-            _contentGrid.ContextMenu = menu;
+            _mainGrid.ContextMenu = menu;
 
         }
 
@@ -208,6 +217,7 @@ namespace AvaloniaTestMVVM.Docking.View
             if (position != EPosition.Bottom && position != EPosition.Top) return;
             
             _mainGrid.Children.Remove(_contentGrid);
+            _mainGrid.Children.Clear();
             // _contentGrid.Children.Remove(_tabControl);
             // _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 1
             // _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // for splitter
@@ -252,11 +262,13 @@ namespace AvaloniaTestMVVM.Docking.View
             _contentGrid.Children.Add(Child1);
             _contentGrid.Children.Add(_gridSplitter);
             _contentGrid.Children.Add(Child2);
+            
             _mainGrid.Children.Add(_contentGrid);
+            _mainGrid.Children.Add(_label);
 
             Orientation = EOrientation.Vertical;
             IsSplitted = true;
-            //_mainGrid.ContextMenu.IsEnabled = false;
+            _mainGrid.ContextMenu.IsEnabled = false;
         }
 
         void SplitHorizontal(ContentViewModel content, EPosition position)
@@ -265,6 +277,12 @@ namespace AvaloniaTestMVVM.Docking.View
             if (position != EPosition.Left && position != EPosition.Right) return;
 
             _mainGrid.Children.Remove(_contentGrid);
+            _mainGrid.Children.Clear();
+            // if (_contentGrid.Parent != null)
+            // {
+            //     (_contentGrid.Parent as Grid).Children.Remove(_contentGrid);
+            // }
+            
             // _contentGrid.Children.Remove(_tabControl);
             // _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 1
             // _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // for splitter
@@ -309,11 +327,13 @@ namespace AvaloniaTestMVVM.Docking.View
             _contentGrid.Children.Add(Child1);
             _contentGrid.Children.Add(_gridSplitter);
             _contentGrid.Children.Add(Child2);
+            
             _mainGrid.Children.Add(_contentGrid);
+            _mainGrid.Children.Add(_label);
             
             Orientation = EOrientation.Horizontal;
             IsSplitted = true;
-            //_mainGrid.ContextMenu.IsEnabled = false;
+            _mainGrid.ContextMenu.IsEnabled = false;
         }
 
         void ChildOnClosed(object sender)
@@ -329,7 +349,7 @@ namespace AvaloniaTestMVVM.Docking.View
             
             Orientation = EOrientation.None;
             IsSplitted = false;
-            //_mainGrid.ContextMenu.IsEnabled = true;
+            
 
             var child = (LayoutPanel)sender;
             Child1.Closed -= this.ChildOnClosed; 
@@ -340,19 +360,24 @@ namespace AvaloniaTestMVVM.Docking.View
             
             if (child == Child1)
             {
+                Child2.Close();
                 //content = Child2.GetContent();
                 content2 = Child2.GetContentGrid();
-                Child2.Close();
             }
             else if (child == Child2)
             {
+                Child1.Close();
                 //content = Child1.GetContent();
                 content2 = Child1.GetContentGrid();
-                Child1.Close();
+                
             }
 
             _contentGrid = content2;
             _mainGrid.Children.Add(_contentGrid);
+            _mainGrid.Children.Add(_label);
+            
+            AddContextMenu();
+            _mainGrid.ContextMenu.IsEnabled = true;
             //this.AddTabControl(content);
         }
 
