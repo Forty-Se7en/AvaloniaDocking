@@ -19,8 +19,10 @@ namespace AvaloniaTestMVVM.Docking.View
 
         #region Events
 
-        public event Action<object> Closed;
-        
+        //public event Action<object> Closed;
+        public event Action<LayoutPanel> CloseRequest;
+        public event Action<LayoutPanel, LayoutPanel> SwapRequest; 
+
         #endregion
         
         #region Fields
@@ -32,7 +34,8 @@ namespace AvaloniaTestMVVM.Docking.View
         private GridSplitter _gridSplitter;
         private Label _label; 
         
-        private ContentViewModel _content;
+        //private ContentViewModel _content;
+        private string _key;
 
         #endregion
         
@@ -58,6 +61,7 @@ namespace AvaloniaTestMVVM.Docking.View
         public LayoutPanel(object content)
         {
             InitializeComponent();
+            _key = "Layout " + _index++;
             //_mainGrid = this.FindControl<Grid>("MainGrid");
             _mainGrid = new Grid();
             this.Content = _mainGrid;
@@ -74,7 +78,7 @@ namespace AvaloniaTestMVVM.Docking.View
             _mainGrid.Children.Add(_contentGrid);
             _label = new Label()
             {
-                Content = "Layout " + _index++, 
+                Content = _key, 
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center
             };
@@ -197,7 +201,7 @@ namespace AvaloniaTestMVVM.Docking.View
                         () => { this.AddContent(CreateRandomContent(), EPosition.Bottom); })
                 },
                 new MenuItem()
-                    { Header = "Удалить", Command = ReactiveCommand.Create(Close) }
+                    { Header = "Удалить", Command = ReactiveCommand.Create(CloseAndSwap) }
             };
 
             menu.Items = items;
@@ -218,10 +222,6 @@ namespace AvaloniaTestMVVM.Docking.View
             
             _mainGrid.Children.Remove(_contentGrid);
             _mainGrid.Children.Clear();
-            // _contentGrid.Children.Remove(_tabControl);
-            // _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 1
-            // _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // for splitter
-            // _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 2
 
             LayoutPanel topChild = null, bottomChild = null;
 
@@ -238,22 +238,23 @@ namespace AvaloniaTestMVVM.Docking.View
             
             Child1 = topChild;
             Child1.Parent = this;
-            Child1.Closed += ChildOnClosed;
+            // Child1.Closed += ChildOnClosed;
+            Child1.CloseRequest += this.OnCloseRequest;
+            Child1.SwapRequest += this.OnSwapRequest;
             Grid.SetRow(Child1,0);
             Grid.SetColumn(Child1,0);
-            //_contentGrid.Children.Add(Child1);
 
             _gridSplitter = new GridSplitter() {HorizontalAlignment = HorizontalAlignment.Stretch, Height = 2, Background = Brushes.Aqua};
             Grid.SetRow(_gridSplitter,1);
             Grid.SetColumn(_gridSplitter,0);
-            //_contentGrid.Children.Add(_gridSplitter);
 
             Child2 = bottomChild;
             Child2.Parent = this;
-            Child2.Closed += ChildOnClosed;
+            //Child2.Closed += ChildOnClosed;
+            Child2.CloseRequest += this.OnCloseRequest;
+            Child2.SwapRequest += this.OnSwapRequest;
             Grid.SetRow(Child2,2);
             Grid.SetColumn(Child2,0);
-            //_contentGrid.Children.Add(Child2);
             
             _contentGrid = new Grid();
             _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // for child 1
@@ -278,15 +279,6 @@ namespace AvaloniaTestMVVM.Docking.View
 
             _mainGrid.Children.Remove(_contentGrid);
             _mainGrid.Children.Clear();
-            // if (_contentGrid.Parent != null)
-            // {
-            //     (_contentGrid.Parent as Grid).Children.Remove(_contentGrid);
-            // }
-            
-            // _contentGrid.Children.Remove(_tabControl);
-            // _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 1
-            // _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // for splitter
-            // _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 2
             
             LayoutPanel leftChild = null, rightChild = null;
 
@@ -303,22 +295,23 @@ namespace AvaloniaTestMVVM.Docking.View
             
             Child1 = leftChild;
             Child1.Parent = this;
-            Child1.Closed += ChildOnClosed;
+            //Child1.Closed += ChildOnClosed;
+            Child1.CloseRequest += this.OnCloseRequest;
+            Child1.SwapRequest += this.OnSwapRequest;
             Grid.SetRow(Child1,0);
             Grid.SetColumn(Child1,0);
-            //_contentGrid.Children.Add(Child1);
 
             _gridSplitter = new GridSplitter() {VerticalAlignment = VerticalAlignment.Stretch, Width = 2, Background = Brushes.Aqua};
             Grid.SetRow(_gridSplitter,0);
             Grid.SetColumn(_gridSplitter,1);
-            //_contentGrid.Children.Add(_gridSplitter);
             
             Child2 = rightChild;
             Child2.Parent = this;
-            Child2.Closed += ChildOnClosed;
+            //Child2.Closed += ChildOnClosed;
+            Child1.CloseRequest += this.OnCloseRequest;
+            Child1.SwapRequest += this.OnSwapRequest;
             Grid.SetRow(Child2,0);
             Grid.SetColumn(Child2,2);
-            //_contentGrid.Children.Add(Child2);
 
             _contentGrid = new Grid();
             _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // for child 1
@@ -352,22 +345,19 @@ namespace AvaloniaTestMVVM.Docking.View
             
 
             var child = (LayoutPanel)sender;
-            Child1.Closed -= this.ChildOnClosed; 
-            Child2.Closed -= this.ChildOnClosed;
+            //Child1.Closed -= this.ChildOnClosed; 
+            //Child2.Closed -= this.ChildOnClosed;
             
-            //TabControl content = null;
             Grid content2 = null;
             
             if (child == Child1)
             {
-                Child2.Close();
-                //content = Child2.GetContent();
+                //Child2.Close();
                 content2 = Child2.GetContentGrid();
             }
             else if (child == Child2)
             {
-                Child1.Close();
-                //content = Child1.GetContent();
+                //Child1.Close();
                 content2 = Child1.GetContentGrid();
                 
             }
@@ -378,18 +368,72 @@ namespace AvaloniaTestMVVM.Docking.View
             
             AddContextMenu();
             _mainGrid.ContextMenu.IsEnabled = true;
-            //this.AddTabControl(content);
         }
 
-        void Close()
+        void OnCloseRequest(LayoutPanel sender)
         {
-            //_mainGrid.Children.Remove(_tabControl);
-            //_mainGrid.Children.Clear();
+            _contentGrid.Children.Remove(Child1);
+            _contentGrid.Children.Remove(Child2);
+            _contentGrid.Children.Clear();
+            _contentGrid.RowDefinitions.Clear();
+            _contentGrid.ColumnDefinitions.Clear();
+            
+            _mainGrid.Children.Remove(_contentGrid);
+            _mainGrid.Children.Clear();
+            
+            Orientation = EOrientation.None;
+            IsSplitted = false;
+
+            Child1.CloseRequest -= this.OnCloseRequest; 
+            Child2.CloseRequest -= this.OnCloseRequest;
+            
+            Child1.SwapRequest -= this.OnSwapRequest; 
+            Child2.SwapRequest -= this.OnSwapRequest;
+            
+            if (sender == Child1)
+            {
+                SwapRequest?.Invoke(this, Child2);
+            }
+            else if (sender == Child2)
+            {
+                SwapRequest?.Invoke(this, Child1);
+            }
+        }
+
+        void OnSwapRequest(LayoutPanel sender, LayoutPanel newPanel)
+        {
+            LayoutPanel panelToSwap = null;
+            if (sender == Child1) panelToSwap = Child1;
+            if (sender == Child2) panelToSwap = Child2;
+
+            panelToSwap.CloseRequest -= this.OnCloseRequest;
+            panelToSwap.SwapRequest -= this.OnSwapRequest;
+            
+            newPanel.CloseRequest += this.OnCloseRequest;
+            newPanel.SwapRequest += this.OnSwapRequest;
+
+            Grid.SetRow(newPanel, Grid.GetRow(panelToSwap));
+            Grid.SetColumn(newPanel, Grid.GetColumn(panelToSwap));
+            _contentGrid.Children.Remove(panelToSwap);
+            
+            _contentGrid.Children.Add(newPanel);
+
+        }
+        
+
+        /*void Close()
+        {
             _mainGrid.Children.Remove(_contentGrid);
             _mainGrid.Children.Clear();
             
             Closed?.Invoke(this);
+        }*/
+
+        void CloseAndSwap()
+        {
+            CloseRequest?.Invoke(this);
         }
+        
 
         public Grid GetContentGrid()
         {
