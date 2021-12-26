@@ -392,11 +392,11 @@ namespace AvaloniaTestMVVM.Docking.View
             
             if (sender == Child1)
             {
-                SwapRequest?.Invoke(this, Child2);
+                SwapRequest.Invoke(this, Child2);
             }
             else if (sender == Child2)
             {
-                SwapRequest?.Invoke(this, Child1);
+                SwapRequest.Invoke(this, Child1);
             }
         }
 
@@ -431,7 +431,7 @@ namespace AvaloniaTestMVVM.Docking.View
 
         void CloseAndSwap()
         {
-            CloseRequest?.Invoke(this);
+            CloseRequest.Invoke(this);
         }
         
 
