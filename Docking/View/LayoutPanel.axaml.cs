@@ -20,8 +20,28 @@ namespace AvaloniaTestMVVM.Docking.View
         #region Events
 
         //public event Action<object> Closed;
-        public event Action<LayoutPanel> CloseRequest;
-        public event Action<LayoutPanel, LayoutPanel> SwapRequest; 
+        private Action<LayoutPanel> _closeRequest;
+        public event Action<LayoutPanel> CloseRequest
+        {
+            add { _closeRequest += value; 
+                //Console.WriteLine($"{_key}.{nameof(CloseRequest)} += {value.ToString()}"); 
+            }
+            remove { _closeRequest -= value; 
+                //Console.WriteLine($"{_key}.{nameof(CloseRequest)} -= {value.ToString()}");
+            }
+        }
+
+        Action<LayoutPanel, LayoutPanel> _swapRequest; 
+        public event Action<LayoutPanel, LayoutPanel> SwapRequest
+        {
+            add
+            { _swapRequest += value; 
+                //Console.WriteLine($"{_key}.{nameof(SwapRequest)} += {value.ToString()}");
+            }
+            remove { _swapRequest -= value;
+                //Console.WriteLine($"{_key}.{nameof(SwapRequest)} -= {value.ToString()}");
+            }
+        }
 
         #endregion
         
@@ -80,7 +100,8 @@ namespace AvaloniaTestMVVM.Docking.View
             {
                 Content = _key, 
                 VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Background = Brushes.White
             };
             _mainGrid.Children.Add(_label);
 
@@ -308,8 +329,8 @@ namespace AvaloniaTestMVVM.Docking.View
             Child2 = rightChild;
             Child2.Parent = this;
             //Child2.Closed += ChildOnClosed;
-            Child1.CloseRequest += this.OnCloseRequest;
-            Child1.SwapRequest += this.OnSwapRequest;
+            Child2.CloseRequest += this.OnCloseRequest;
+            Child2.SwapRequest += this.OnSwapRequest;
             Grid.SetRow(Child2,0);
             Grid.SetColumn(Child2,2);
 
@@ -392,19 +413,28 @@ namespace AvaloniaTestMVVM.Docking.View
             
             if (sender == Child1)
             {
-                SwapRequest.Invoke(this, Child2);
+                _swapRequest.Invoke(this, Child2);
             }
             else if (sender == Child2)
             {
-                SwapRequest.Invoke(this, Child1);
+                _swapRequest.Invoke(this, Child1);
             }
         }
 
         void OnSwapRequest(LayoutPanel sender, LayoutPanel newPanel)
         {
             LayoutPanel panelToSwap = null;
-            if (sender == Child1) panelToSwap = Child1;
-            if (sender == Child2) panelToSwap = Child2;
+            if (sender == Child1)
+            {
+                panelToSwap = Child1;
+                Child1 = newPanel;
+            }
+
+            if (sender == Child2)
+            {
+                panelToSwap = Child2;
+                Child2 = newPanel;
+            }
 
             panelToSwap.CloseRequest -= this.OnCloseRequest;
             panelToSwap.SwapRequest -= this.OnSwapRequest;
@@ -431,7 +461,7 @@ namespace AvaloniaTestMVVM.Docking.View
 
         void CloseAndSwap()
         {
-            CloseRequest.Invoke(this);
+            _closeRequest.Invoke(this);
         }
         
 
