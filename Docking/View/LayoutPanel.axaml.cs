@@ -9,39 +9,19 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaTestMVVM.Docking.Model;
 using AvaloniaTestMVVM.ViewModels;
+using AvaloniaTestMVVM.Views;
 using ReactiveUI;
 
 namespace AvaloniaTestMVVM.Docking.View
 {
     public class LayoutPanel : UserControl, ILayoutPanel
     {
-        private static int _index;
-
         #region Events
+        public event Action<LayoutPanel> CloseRequest;
 
-        //public event Action<object> Closed;
-        private Action<LayoutPanel> _closeRequest;
-        public event Action<LayoutPanel> CloseRequest
-        {
-            add { _closeRequest += value; 
-                //Console.WriteLine($"{_key}.{nameof(CloseRequest)} += {value.ToString()}"); 
-            }
-            remove { _closeRequest -= value; 
-                //Console.WriteLine($"{_key}.{nameof(CloseRequest)} -= {value.ToString()}");
-            }
-        }
+        public event Action<LayoutPanel, LayoutPanel> SwapRequest;
 
-        Action<LayoutPanel, LayoutPanel> _swapRequest; 
-        public event Action<LayoutPanel, LayoutPanel> SwapRequest
-        {
-            add
-            { _swapRequest += value; 
-                //Console.WriteLine($"{_key}.{nameof(SwapRequest)} += {value.ToString()}");
-            }
-            remove { _swapRequest -= value;
-                //Console.WriteLine($"{_key}.{nameof(SwapRequest)} -= {value.ToString()}");
-            }
-        }
+        public event Action<LayoutPanel> FlowRequest; 
 
         #endregion
         
@@ -52,8 +32,7 @@ namespace AvaloniaTestMVVM.Docking.View
         private TabControl _tabControl;
         //private TabItem _tabItem;
         private GridSplitter _gridSplitter;
-        private Label _label; 
-        
+        private Label _label;
         //private ContentViewModel _content;
         private string _key;
 
@@ -71,13 +50,15 @@ namespace AvaloniaTestMVVM.Docking.View
         private LayoutPanel Child2 { get; set; }
         
         /// <summary> Состояние контрола </summary>
-        public bool IsSplitted{ get; private set; }
+        bool IsSplitted{ get; set; }
         
         /// <summary> Ориентация </summary>
-        public EOrientation Orientation { get; private set; }
+        EOrientation Orientation { get; set; }
         
         #endregion
 
+        #region Ctors
+        
         public LayoutPanel(object content)
         {
             InitializeComponent();
@@ -116,6 +97,7 @@ namespace AvaloniaTestMVVM.Docking.View
             }
 
             AddContextMenu();
+            SubscribeEvents();
         }
 
         public LayoutPanel()
@@ -123,11 +105,12 @@ namespace AvaloniaTestMVVM.Docking.View
             InitializeComponent();
         }
 
-
+        #endregion
+        
         #region Methods
 
         /// <summary> Добавляет контент </summary>
-        public void AddContent(ContentViewModel content, EPosition position)
+        void AddContent(ContentViewModel content, EPosition position)
         {
             switch (position)
             {
@@ -145,7 +128,6 @@ namespace AvaloniaTestMVVM.Docking.View
                     break;
             }
         }
-
 
         void AddTabControl(TabControl tabControl = null)
         {
@@ -168,23 +150,7 @@ namespace AvaloniaTestMVVM.Docking.View
 
         }
 
-        public static ContentViewModel CreateRandomContent()
-        {
-            Random r = new Random();
-            var content = new ContentViewModel()
-            {
-                Content = new Panel()
-                {
-                    Background = new SolidColorBrush(Color.FromRgb((byte)r.Next(1, 255),
-                        (byte)r.Next(1, 255), (byte)r.Next(1, 233)))
-                }
-            };
-            return content;
-        }
-
-
-
-        public void AddContextMenu()
+        void AddContextMenu()
         {
             ContextMenu menu = new ContextMenu();
             var items = new[]
@@ -222,7 +188,7 @@ namespace AvaloniaTestMVVM.Docking.View
                         () => { this.AddContent(CreateRandomContent(), EPosition.Bottom); })
                 },
                 new MenuItem()
-                    { Header = "Удалить", Command = ReactiveCommand.Create(CloseAndSwap) }
+                    { Header = "Удалить", Command = ReactiveCommand.Create(Close) }
             };
 
             menu.Items = items;
@@ -230,12 +196,7 @@ namespace AvaloniaTestMVVM.Docking.View
             _mainGrid.ContextMenu = menu;
 
         }
-
-        public void Flow()
-        {
-            
-        }
-        
+       
         void SplitVertical(ContentViewModel content, EPosition position)
         {
             if (IsSplitted) return;
@@ -260,8 +221,9 @@ namespace AvaloniaTestMVVM.Docking.View
             Child1 = topChild;
             Child1.Parent = this;
             // Child1.Closed += ChildOnClosed;
-            Child1.CloseRequest += this.OnCloseRequest;
-            Child1.SwapRequest += this.OnSwapRequest;
+            Child1.CloseRequest += this.OnChildCloseRequest;
+            Child1.SwapRequest += this.OnChildSwapRequest;
+            Child1.FlowRequest += this.OnChildFlowRequest;
             Grid.SetRow(Child1,0);
             Grid.SetColumn(Child1,0);
 
@@ -272,8 +234,9 @@ namespace AvaloniaTestMVVM.Docking.View
             Child2 = bottomChild;
             Child2.Parent = this;
             //Child2.Closed += ChildOnClosed;
-            Child2.CloseRequest += this.OnCloseRequest;
-            Child2.SwapRequest += this.OnSwapRequest;
+            Child2.CloseRequest += this.OnChildCloseRequest;
+            Child2.SwapRequest += this.OnChildSwapRequest;
+            Child2.FlowRequest += this.OnChildFlowRequest;
             Grid.SetRow(Child2,2);
             Grid.SetColumn(Child2,0);
             
@@ -317,8 +280,9 @@ namespace AvaloniaTestMVVM.Docking.View
             Child1 = leftChild;
             Child1.Parent = this;
             //Child1.Closed += ChildOnClosed;
-            Child1.CloseRequest += this.OnCloseRequest;
-            Child1.SwapRequest += this.OnSwapRequest;
+            Child1.CloseRequest += this.OnChildCloseRequest;
+            Child1.SwapRequest += this.OnChildSwapRequest;
+            Child1.FlowRequest += this.OnChildFlowRequest;
             Grid.SetRow(Child1,0);
             Grid.SetColumn(Child1,0);
 
@@ -329,8 +293,9 @@ namespace AvaloniaTestMVVM.Docking.View
             Child2 = rightChild;
             Child2.Parent = this;
             //Child2.Closed += ChildOnClosed;
-            Child2.CloseRequest += this.OnCloseRequest;
-            Child2.SwapRequest += this.OnSwapRequest;
+            Child2.CloseRequest += this.OnChildCloseRequest;
+            Child2.SwapRequest += this.OnChildSwapRequest;
+            Child2.FlowRequest += this.OnChildFlowRequest;
             Grid.SetRow(Child2,0);
             Grid.SetColumn(Child2,2);
 
@@ -350,48 +315,32 @@ namespace AvaloniaTestMVVM.Docking.View
             _mainGrid.ContextMenu.IsEnabled = false;
         }
 
-        void ChildOnClosed(object sender)
+        void Close()
         {
-            _contentGrid.Children.Remove(Child1);
-            _contentGrid.Children.Remove(Child2);
-            _contentGrid.Children.Clear();
-            _contentGrid.RowDefinitions.Clear();
-            _contentGrid.ColumnDefinitions.Clear();
-            
-            _mainGrid.Children.Remove(_contentGrid);
-            _mainGrid.Children.Clear();
-            
-            Orientation = EOrientation.None;
-            IsSplitted = false;
-            
-
-            var child = (LayoutPanel)sender;
-            //Child1.Closed -= this.ChildOnClosed; 
-            //Child2.Closed -= this.ChildOnClosed;
-            
-            Grid content2 = null;
-            
-            if (child == Child1)
-            {
-                //Child2.Close();
-                content2 = Child2.GetContentGrid();
-            }
-            else if (child == Child2)
-            {
-                //Child1.Close();
-                content2 = Child1.GetContentGrid();
-                
-            }
-
-            _contentGrid = content2;
-            _mainGrid.Children.Add(_contentGrid);
-            _mainGrid.Children.Add(_label);
-            
-            AddContextMenu();
-            _mainGrid.ContextMenu.IsEnabled = true;
+            CloseRequest.Invoke(this);
+        }
+        
+        void Flow()
+        {
+            this.FlowRequest?.Invoke(this);
         }
 
-        void OnCloseRequest(LayoutPanel sender)
+        void SubscribeEvents()
+        {
+            //this.AddHandler(PointerReleasedEvent, MouseDownHandler, handledEventsToo: true);
+            
+        }
+
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
+        
+        #endregion
+        
+        #region Handlers
+        
+        void OnChildCloseRequest(LayoutPanel sender)
         {
             _contentGrid.Children.Remove(Child1);
             _contentGrid.Children.Remove(Child2);
@@ -405,23 +354,23 @@ namespace AvaloniaTestMVVM.Docking.View
             Orientation = EOrientation.None;
             IsSplitted = false;
 
-            Child1.CloseRequest -= this.OnCloseRequest; 
-            Child2.CloseRequest -= this.OnCloseRequest;
+            Child1.CloseRequest -= this.OnChildCloseRequest; 
+            Child2.CloseRequest -= this.OnChildCloseRequest;
             
-            Child1.SwapRequest -= this.OnSwapRequest; 
-            Child2.SwapRequest -= this.OnSwapRequest;
+            Child1.SwapRequest -= this.OnChildSwapRequest; 
+            Child2.SwapRequest -= this.OnChildSwapRequest;
             
             if (sender == Child1)
             {
-                _swapRequest.Invoke(this, Child2);
+                SwapRequest?.Invoke(this, Child2);
             }
             else if (sender == Child2)
             {
-                _swapRequest.Invoke(this, Child1);
+                SwapRequest?.Invoke(this, Child1);
             }
         }
 
-        void OnSwapRequest(LayoutPanel sender, LayoutPanel newPanel)
+        void OnChildSwapRequest(LayoutPanel sender, LayoutPanel newPanel)
         {
             LayoutPanel panelToSwap = null;
             if (sender == Child1)
@@ -436,11 +385,11 @@ namespace AvaloniaTestMVVM.Docking.View
                 Child2 = newPanel;
             }
 
-            panelToSwap.CloseRequest -= this.OnCloseRequest;
-            panelToSwap.SwapRequest -= this.OnSwapRequest;
+            panelToSwap.CloseRequest -= this.OnChildCloseRequest;
+            panelToSwap.SwapRequest -= this.OnChildSwapRequest;
             
-            newPanel.CloseRequest += this.OnCloseRequest;
-            newPanel.SwapRequest += this.OnSwapRequest;
+            newPanel.CloseRequest += this.OnChildCloseRequest;
+            newPanel.SwapRequest += this.OnChildSwapRequest;
 
             Grid.SetRow(newPanel, Grid.GetRow(panelToSwap));
             Grid.SetColumn(newPanel, Grid.GetColumn(panelToSwap));
@@ -449,34 +398,39 @@ namespace AvaloniaTestMVVM.Docking.View
             _contentGrid.Children.Add(newPanel);
 
         }
-        
 
-        /*void Close()
+        void OnChildFlowRequest(LayoutPanel sender)
         {
+            _contentGrid.Children.Remove(Child1);
+            _contentGrid.Children.Remove(Child2);
+            _contentGrid.Children.Clear();
+            _contentGrid.RowDefinitions.Clear();
+            _contentGrid.ColumnDefinitions.Clear();
+            
             _mainGrid.Children.Remove(_contentGrid);
             _mainGrid.Children.Clear();
             
-            Closed?.Invoke(this);
-        }*/
+            Orientation = EOrientation.None;
+            IsSplitted = false;
 
-        void CloseAndSwap()
-        {
-            _closeRequest.Invoke(this);
+            Child1.CloseRequest -= this.OnChildCloseRequest; 
+            Child2.CloseRequest -= this.OnChildCloseRequest;
+            
+            Child1.SwapRequest -= this.OnChildSwapRequest; 
+            Child2.SwapRequest -= this.OnChildSwapRequest;
+            
+            if (sender == Child1)
+            {
+                SwapRequest?.Invoke(this, Child2);
+            }
+            else if (sender == Child2)
+            {
+                SwapRequest?.Invoke(this, Child1);
+            }
+            
+            new FloatingWindow(sender).Show();
         }
-        
 
-        public Grid GetContentGrid()
-        {
-            return _contentGrid;
-        }
-        
-
-        void SubscribeEvents()
-        {
-            this.AddHandler(PointerReleasedEvent, MouseDownHandler, handledEventsToo: true);
-        }
-
-        
         private void MouseDownHandler(object? sender, PointerReleasedEventArgs e)
         {
             // System.Diagnostics.Debug.Write("Mouse pressed: ");
@@ -496,13 +450,27 @@ namespace AvaloniaTestMVVM.Docking.View
             //         break;
             // }
         }
-
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
         
+        #endregion
+
+        #region Static
+
+        private static int _index;
+        
+        public static ContentViewModel CreateRandomContent()
+        {
+            Random r = new Random();
+            var content = new ContentViewModel()
+            {
+                Content = new Panel()
+                {
+                    Background = new SolidColorBrush(Color.FromRgb((byte)r.Next(1, 255),
+                        (byte)r.Next(1, 255), (byte)r.Next(1, 233)))
+                }
+            };
+            return content;
+        }
+
         #endregion
     }
 }
