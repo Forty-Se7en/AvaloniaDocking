@@ -59,9 +59,8 @@ namespace AvaloniaTestMVVM.Docking.View
 
         #region Ctors
         
-        public LayoutPanel(object content)
+        public LayoutPanel(object content) : this()
         {
-            InitializeComponent();
             _key = "Layout " + _index++;
             //_mainGrid = this.FindControl<Grid>("MainGrid");
             _mainGrid = new Grid();
