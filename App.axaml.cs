@@ -23,10 +23,8 @@ namespace AvaloniaTestMVVM
                     DataContext = new MainWindowViewModel()
                 };
 
-                desktop.MainWindow.Content = new LayoutPanel(LayoutPanel.CreateRandomContent());
+                desktop.MainWindow.Content = new RootPanel(new LayoutPanel(LayoutPanel.CreateRandomContent()));
             }
-            
-            
 
             base.OnFrameworkInitializationCompleted();
         }

@@ -14,16 +14,13 @@ namespace AvaloniaTestMVVM.Views
 #if DEBUG
             this.AttachDevTools();
 #endif
-            this.Content = new Grid() { Background = Brushes.Red };
         }
 
-        public FloatingWindow(LayoutPanel content)
+        public FloatingWindow(LayoutPanel content) : this()
         {
-            InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
-            this.Content = content;
+            var rootPanel = new RootPanel(content);
+            this.Content = rootPanel;
+            rootPanel.Cleared += this.Close;
         }
 
         private void InitializeComponent()

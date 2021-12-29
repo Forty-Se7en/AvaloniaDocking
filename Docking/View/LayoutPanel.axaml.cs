@@ -41,7 +41,7 @@ namespace AvaloniaTestMVVM.Docking.View
         #region Properties
         
         /// <summary> Родительский контрол </summary>
-        private LayoutPanel Parent { get; set; }
+        //private LayoutPanel Parent { get; set; }
         
         /// <summary> Дочерний контрол </summary>
         private LayoutPanel Child1 { get; set; }
@@ -218,7 +218,7 @@ namespace AvaloniaTestMVVM.Docking.View
             }
             
             Child1 = topChild;
-            Child1.Parent = this;
+            //Child1.Parent = this;
             // Child1.Closed += ChildOnClosed;
             Child1.CloseRequest += this.OnChildCloseRequest;
             Child1.SwapRequest += this.OnChildSwapRequest;
@@ -231,7 +231,7 @@ namespace AvaloniaTestMVVM.Docking.View
             Grid.SetColumn(_gridSplitter,0);
 
             Child2 = bottomChild;
-            Child2.Parent = this;
+            //Child2.Parent = this;
             //Child2.Closed += ChildOnClosed;
             Child2.CloseRequest += this.OnChildCloseRequest;
             Child2.SwapRequest += this.OnChildSwapRequest;
@@ -277,7 +277,7 @@ namespace AvaloniaTestMVVM.Docking.View
             }
             
             Child1 = leftChild;
-            Child1.Parent = this;
+            //Child1.Parent = this;
             //Child1.Closed += ChildOnClosed;
             Child1.CloseRequest += this.OnChildCloseRequest;
             Child1.SwapRequest += this.OnChildSwapRequest;
@@ -290,7 +290,7 @@ namespace AvaloniaTestMVVM.Docking.View
             Grid.SetColumn(_gridSplitter,1);
             
             Child2 = rightChild;
-            Child2.Parent = this;
+            //Child2.Parent = this;
             //Child2.Closed += ChildOnClosed;
             Child2.CloseRequest += this.OnChildCloseRequest;
             Child2.SwapRequest += this.OnChildSwapRequest;
@@ -359,6 +359,9 @@ namespace AvaloniaTestMVVM.Docking.View
             Child1.SwapRequest -= this.OnChildSwapRequest; 
             Child2.SwapRequest -= this.OnChildSwapRequest;
             
+            Child1.FlowRequest -= this.OnChildFlowRequest;
+            Child2.FlowRequest -= this.OnChildFlowRequest;
+            
             if (sender == Child1)
             {
                 SwapRequest?.Invoke(this, Child2);
@@ -386,10 +389,12 @@ namespace AvaloniaTestMVVM.Docking.View
 
             panelToSwap.CloseRequest -= this.OnChildCloseRequest;
             panelToSwap.SwapRequest -= this.OnChildSwapRequest;
+            panelToSwap.FlowRequest -= this.OnChildFlowRequest;
             
             newPanel.CloseRequest += this.OnChildCloseRequest;
             newPanel.SwapRequest += this.OnChildSwapRequest;
-
+            newPanel.FlowRequest += this.OnChildFlowRequest;
+            
             Grid.SetRow(newPanel, Grid.GetRow(panelToSwap));
             Grid.SetColumn(newPanel, Grid.GetColumn(panelToSwap));
             _contentGrid.Children.Remove(panelToSwap);
@@ -400,33 +405,7 @@ namespace AvaloniaTestMVVM.Docking.View
 
         void OnChildFlowRequest(LayoutPanel sender)
         {
-            _contentGrid.Children.Remove(Child1);
-            _contentGrid.Children.Remove(Child2);
-            _contentGrid.Children.Clear();
-            _contentGrid.RowDefinitions.Clear();
-            _contentGrid.ColumnDefinitions.Clear();
-            
-            _mainGrid.Children.Remove(_contentGrid);
-            _mainGrid.Children.Clear();
-            
-            Orientation = EOrientation.None;
-            IsSplitted = false;
-
-            Child1.CloseRequest -= this.OnChildCloseRequest; 
-            Child2.CloseRequest -= this.OnChildCloseRequest;
-            
-            Child1.SwapRequest -= this.OnChildSwapRequest; 
-            Child2.SwapRequest -= this.OnChildSwapRequest;
-            
-            if (sender == Child1)
-            {
-                SwapRequest?.Invoke(this, Child2);
-            }
-            else if (sender == Child2)
-            {
-                SwapRequest?.Invoke(this, Child1);
-            }
-            
+            OnChildCloseRequest(sender);
             new FloatingWindow(sender).Show();
         }
 

@@ -1,11 +1,15 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using AvaloniaTestMVVM.Views;
 
 namespace AvaloniaTestMVVM.Docking.View
 {
     public class RootPanel : UserControl
     {
+        public event Action Cleared;
+        
         private Grid _mainGrid;
         
         #region Ctors
@@ -13,15 +17,13 @@ namespace AvaloniaTestMVVM.Docking.View
         public RootPanel()
         {
             InitializeComponent();
+            _mainGrid = new Grid();
+            this.Content = _mainGrid;
         }
 
         public RootPanel(LayoutPanel panel) : this()
         {
-            _mainGrid = new Grid();
-            this.Content = _mainGrid;
-            panel.CloseRequest += PanelOnCloseRequest;
-            panel.SwapRequest += PanelOnSwapRequest;
-            panel.FlowRequest += PanelOnFlowRequest;
+            this.AddLayout(panel);
         }
 
         #endregion
@@ -37,8 +39,20 @@ namespace AvaloniaTestMVVM.Docking.View
         {
             _mainGrid.Children.Remove(panel);
             _mainGrid.Children.Clear();
+            
+            panel.CloseRequest -= PanelOnCloseRequest;
+            panel.SwapRequest -= PanelOnSwapRequest;
+            panel.FlowRequest -= PanelOnFlowRequest;
         }
-        
+
+        void AddLayout(LayoutPanel panel)
+        {
+            _mainGrid.Children.Add(panel);
+            
+            panel.CloseRequest += PanelOnCloseRequest;
+            panel.SwapRequest += PanelOnSwapRequest;
+            panel.FlowRequest += PanelOnFlowRequest;
+        }
         
         #endregion
         
@@ -46,20 +60,21 @@ namespace AvaloniaTestMVVM.Docking.View
         
         private void PanelOnCloseRequest(LayoutPanel sender)
         {
-            sender.CloseRequest += PanelOnCloseRequest;
-            sender.SwapRequest += PanelOnSwapRequest;
-            sender.FlowRequest += PanelOnFlowRequest;
             RemoveLayout(sender);
+            Cleared?.Invoke();
         }
 
         private void PanelOnSwapRequest(LayoutPanel sender, LayoutPanel newPanel)
         {
             RemoveLayout(sender);
+            AddLayout(newPanel);
         }
 
         private void PanelOnFlowRequest(LayoutPanel sender)
         {
             RemoveLayout(sender);
+            new FloatingWindow(sender).Show();
+            Cleared?.Invoke();
         }
 
         #endregion
