@@ -253,6 +253,7 @@ namespace AvaloniaTestMVVM.Docking.View
             Orientation = EOrientation.Vertical;
             IsSplitted = true;
             _mainGrid.ContextMenu.IsEnabled = false;
+            this.UnsubscribeEvents();
         }
 
         void SplitHorizontal(ContentViewModel content, EPosition position)
@@ -312,6 +313,7 @@ namespace AvaloniaTestMVVM.Docking.View
             Orientation = EOrientation.Horizontal;
             IsSplitted = true;
             _mainGrid.ContextMenu.IsEnabled = false;
+            this.UnsubscribeEvents();
         }
 
         void Close()
@@ -326,8 +328,19 @@ namespace AvaloniaTestMVVM.Docking.View
 
         void SubscribeEvents()
         {
-            //this.AddHandler(PointerReleasedEvent, MouseDownHandler, handledEventsToo: true);
-            
+            this.AddHandler(PointerReleasedEvent, MouseUpHandler, handledEventsToo: true);
+            this.AddHandler(PointerPressedEvent, MouseDownHandler, handledEventsToo: true);
+            this.AddHandler(PointerLeaveEvent, MouseLeaveHandler, handledEventsToo: true);
+            this.AddHandler(PointerMovedEvent, MouseMovedHandler, handledEventsToo: true);
+        }
+
+        
+        void UnsubscribeEvents()
+        {
+            this.RemoveHandler(PointerReleasedEvent, MouseUpHandler);
+            this.RemoveHandler(PointerPressedEvent, MouseDownHandler);
+            this.RemoveHandler(PointerLeaveEvent, MouseLeaveHandler);
+            this.RemoveHandler(PointerMovedEvent, MouseMovedHandler);
         }
 
         private void InitializeComponent()
@@ -409,24 +422,50 @@ namespace AvaloniaTestMVVM.Docking.View
             new FloatingWindow(sender).Show();
         }
 
-        private void MouseDownHandler(object? sender, PointerReleasedEventArgs e)
+        private void MouseUpHandler(object? sender, PointerReleasedEventArgs e)
         {
-            // System.Diagnostics.Debug.Write("Mouse pressed: ");
-            // switch (e.InitialPressMouseButton)
-            // {
-            //     case MouseButton.Left: 
-            //         System.Diagnostics.Debug.WriteLine("LEFT");
-            //         this.SplitHorizontal(); 
-            //         break;
-            //     case MouseButton.Right: 
-            //         System.Diagnostics.Debug.WriteLine("RIGHT");
-            //         this.SplitVertical(); 
-            //         break;
-            //     case MouseButton.Middle: 
-            //         System.Diagnostics.Debug.WriteLine("MIDDLE");
-            //         this.Close();
-            //         break;
-            // }
+            //System.Diagnostics.Debug.Write("Mouse pressed: ");
+            switch (e.InitialPressMouseButton)
+            {
+                case MouseButton.Left:
+                    if (DragData.DragSource != this)
+                    {
+                        DragData.DragTarget = this;
+                    }
+                        
+                    System.Diagnostics.Debug.WriteLine($"Mouse up on {this._key}");
+                    //this.SplitHorizontal(); 
+                    break;
+                case MouseButton.Right: 
+                    //System.Diagnostics.Debug.WriteLine("RIGHT");
+                    //this.SplitVertical(); 
+                    break;
+                case MouseButton.Middle: 
+                    //System.Diagnostics.Debug.WriteLine("MIDDLE");
+                    //this.Close();
+                    break;
+            }
+        }
+        
+        private void MouseDownHandler(object? sender, PointerPressedEventArgs e)
+        {
+            var props = e.GetCurrentPoint(this).Properties;
+
+            if (props.IsLeftButtonPressed)
+            {
+                DragData.DragSource = this;
+                System.Diagnostics.Debug.WriteLine($"Mouse down on {this._key}");
+            }
+        }
+        
+        private void MouseLeaveHandler(object? sender, PointerEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"Mouse leave on {this._key}");
+        }
+        
+        private void MouseMovedHandler(object? sender, PointerEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"Mouse move on {this._key}");
         }
         
         #endregion
