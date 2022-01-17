@@ -96,7 +96,7 @@ namespace AvaloniaTestMVVM.Docking.View
             }
 
             AddContextMenu();
-            SubscribeEvents();
+            AddEvents();
         }
 
         public LayoutPanel()
@@ -109,7 +109,7 @@ namespace AvaloniaTestMVVM.Docking.View
         #region Methods
 
         /// <summary> Добавляет контент </summary>
-        void AddContent(ContentViewModel content, EPosition position)
+        public void AddContent(ContentViewModel content, EPosition position)
         {
             switch (position)
             {
@@ -253,7 +253,7 @@ namespace AvaloniaTestMVVM.Docking.View
             Orientation = EOrientation.Vertical;
             IsSplitted = true;
             _mainGrid.ContextMenu.IsEnabled = false;
-            this.UnsubscribeEvents();
+            this.RemoveEvents();
         }
 
         void SplitHorizontal(ContentViewModel content, EPosition position)
@@ -313,10 +313,10 @@ namespace AvaloniaTestMVVM.Docking.View
             Orientation = EOrientation.Horizontal;
             IsSplitted = true;
             _mainGrid.ContextMenu.IsEnabled = false;
-            this.UnsubscribeEvents();
+            this.RemoveEvents();
         }
 
-        void Close()
+        public void Close()
         {
             CloseRequest.Invoke(this);
         }
@@ -326,26 +326,32 @@ namespace AvaloniaTestMVVM.Docking.View
             this.FlowRequest?.Invoke(this);
         }
 
-        void SubscribeEvents()
+        void AddEvents()
         {
             this.AddHandler(PointerReleasedEvent, MouseUpHandler, handledEventsToo: true);
             this.AddHandler(PointerPressedEvent, MouseDownHandler, handledEventsToo: true);
             this.AddHandler(PointerLeaveEvent, MouseLeaveHandler, handledEventsToo: true);
-            this.AddHandler(PointerMovedEvent, MouseMovedHandler, handledEventsToo: true);
+            this.AddHandler(PointerEnterEvent, MouseEnterHandler, handledEventsToo: true);
+            //this.AddHandler(PointerMovedEvent, MouseMovedHandler, handledEventsToo: true);
         }
-
-        
-        void UnsubscribeEvents()
+        void RemoveEvents()
         {
             this.RemoveHandler(PointerReleasedEvent, MouseUpHandler);
             this.RemoveHandler(PointerPressedEvent, MouseDownHandler);
             this.RemoveHandler(PointerLeaveEvent, MouseLeaveHandler);
-            this.RemoveHandler(PointerMovedEvent, MouseMovedHandler);
+            this.RemoveHandler(PointerEnterEvent, MouseEnterHandler);
+            //this.RemoveHandler(PointerMovedEvent, MouseMovedHandler);
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+        }
+
+        void DragDrop(LayoutPanel source, LayoutPanel target)
+        {
+            source.Close();
+            target.AddContent(new ContentViewModel(){Title = source._key, Content = source._contentGrid}, EPosition.Right);
         }
         
         #endregion
@@ -421,6 +427,8 @@ namespace AvaloniaTestMVVM.Docking.View
             OnChildCloseRequest(sender);
             new FloatingWindow(sender).Show();
         }
+        
+        
 
         private void MouseUpHandler(object? sender, PointerReleasedEventArgs e)
         {
@@ -431,6 +439,11 @@ namespace AvaloniaTestMVVM.Docking.View
                     if (DragData.DragSource != this)
                     {
                         DragData.DragTarget = this;
+                        DragDrop(DragData.DragSource, DragData.DragTarget);
+                    }
+                    else
+                    {
+                        DragData.DragSource = null;
                     }
                         
                     System.Diagnostics.Debug.WriteLine($"Mouse up on {this._key}");
@@ -454,6 +467,7 @@ namespace AvaloniaTestMVVM.Docking.View
             if (props.IsLeftButtonPressed)
             {
                 DragData.DragSource = this;
+                e.Pointer.Capture(null);
                 System.Diagnostics.Debug.WriteLine($"Mouse down on {this._key}");
             }
         }
@@ -461,6 +475,11 @@ namespace AvaloniaTestMVVM.Docking.View
         private void MouseLeaveHandler(object? sender, PointerEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine($"Mouse leave on {this._key}");
+        }
+        
+        private void MouseEnterHandler(object? sender, PointerEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"Mouse enter on {this._key}");
         }
         
         private void MouseMovedHandler(object? sender, PointerEventArgs e)
