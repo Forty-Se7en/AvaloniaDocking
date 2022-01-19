@@ -36,11 +36,13 @@ namespace AvaloniaTestMVVM.Docking.View
         //private ContentViewModel _content;
         private string _key;
 
+        private ContentViewModel _content;
+        
         #endregion
         
         #region Properties
         
-        /// <summary> Родительский контрол </summary>
+        ///// <summary> Родительский контрол </summary>
         //private LayoutPanel Parent { get; set; }
         
         /// <summary> Дочерний контрол </summary>
@@ -119,11 +121,11 @@ namespace AvaloniaTestMVVM.Docking.View
                     break;
                 case EPosition.Left:
                 case EPosition.Right:
-                    SplitHorizontal(content, position);
+                    SplitHorizontal(new LayoutPanel(content), position);
                     break;
                 case EPosition.Top:
                 case EPosition.Bottom:
-                    SplitVertical(content, position);
+                    SplitVertical(new LayoutPanel(content), position);
                     break;
             }
         }
@@ -187,7 +189,7 @@ namespace AvaloniaTestMVVM.Docking.View
                         () => { this.AddContent(CreateRandomContent(), EPosition.Bottom); })
                 },
                 new MenuItem()
-                    { Header = "Удалить", Command = ReactiveCommand.Create(Close) }
+                    { Header = "Удалить", Command = ReactiveCommand.Create(RemoveActiveContent) }
             };
 
             menu.Items = items;
@@ -196,7 +198,7 @@ namespace AvaloniaTestMVVM.Docking.View
 
         }
        
-        void SplitVertical(ContentViewModel content, EPosition position)
+        void SplitVertical(LayoutPanel panel, EPosition position)
         {
             if (IsSplitted) return;
             if (position != EPosition.Bottom && position != EPosition.Top) return;
@@ -208,12 +210,14 @@ namespace AvaloniaTestMVVM.Docking.View
 
             if (position == EPosition.Top)
             {
-                topChild = new LayoutPanel(content);
+                // topChild = new LayoutPanel(content);
+                topChild = panel;
                 bottomChild = new LayoutPanel(_contentGrid);
             }
             else if (position == EPosition.Bottom)
             {
-                bottomChild = new LayoutPanel(content);
+                // bottomChild = new LayoutPanel(content);
+                bottomChild = panel;
                 topChild = new LayoutPanel(_contentGrid);
             }
             
@@ -256,7 +260,7 @@ namespace AvaloniaTestMVVM.Docking.View
             this.RemoveEvents();
         }
 
-        void SplitHorizontal(ContentViewModel content, EPosition position)
+        void SplitHorizontal(LayoutPanel panel, EPosition position)
         {
             if (IsSplitted) return;
             if (position != EPosition.Left && position != EPosition.Right) return;
@@ -268,12 +272,14 @@ namespace AvaloniaTestMVVM.Docking.View
 
             if (position == EPosition.Left)
             {
-                leftChild = new LayoutPanel(content);
+                // leftChild = new LayoutPanel(content);
+                leftChild = panel;
                 rightChild = new LayoutPanel(_contentGrid);
             }
             else if (position == EPosition.Right)
             {
-                rightChild = new LayoutPanel(content);
+                // rightChild = new LayoutPanel(content);
+                rightChild = panel;
                 leftChild = new LayoutPanel(_contentGrid);
             }
             
@@ -316,7 +322,26 @@ namespace AvaloniaTestMVVM.Docking.View
             this.RemoveEvents();
         }
 
-        public void Close()
+        public void RemoveActiveContent()
+        {
+            if (_tabControl.SelectedItem != null)
+            {
+                var tabItem = (TabItem)_tabControl.SelectedItem;
+                var items = _tabControl.Items.Cast<object>().ToList();
+                items.Remove(tabItem);
+
+                if (items.Count == 0)
+                {
+                    Close();
+                }
+                else
+                {
+                    _tabControl.Items = items;
+                }
+            }
+        }
+
+        void Close()
         {
             CloseRequest.Invoke(this);
         }
@@ -334,6 +359,7 @@ namespace AvaloniaTestMVVM.Docking.View
             this.AddHandler(PointerEnterEvent, MouseEnterHandler, handledEventsToo: true);
             //this.AddHandler(PointerMovedEvent, MouseMovedHandler, handledEventsToo: true);
         }
+        
         void RemoveEvents()
         {
             this.RemoveHandler(PointerReleasedEvent, MouseUpHandler);
@@ -348,10 +374,10 @@ namespace AvaloniaTestMVVM.Docking.View
             AvaloniaXamlLoader.Load(this);
         }
 
-        void DragDrop(LayoutPanel source, LayoutPanel target)
+        void DragDrop(LayoutPanel source, LayoutPanel target, ContentViewModel content)
         {
-            source.Close();
-            target.AddContent(new ContentViewModel(){Title = source._key, Content = source._contentGrid}, EPosition.Right);
+            source.RemoveActiveContent();
+            target.AddContent(content, EPosition.Center);
         }
         
         #endregion
@@ -427,8 +453,6 @@ namespace AvaloniaTestMVVM.Docking.View
             OnChildCloseRequest(sender);
             new FloatingWindow(sender).Show();
         }
-        
-        
 
         private void MouseUpHandler(object? sender, PointerReleasedEventArgs e)
         {
@@ -439,7 +463,7 @@ namespace AvaloniaTestMVVM.Docking.View
                     if (DragData.DragSource != this)
                     {
                         DragData.DragTarget = this;
-                        DragDrop(DragData.DragSource, DragData.DragTarget);
+                        DragDrop(DragData.DragSource, DragData.DragTarget, DragData.DragContent);
                     }
                     else
                     {
@@ -463,28 +487,36 @@ namespace AvaloniaTestMVVM.Docking.View
         private void MouseDownHandler(object? sender, PointerPressedEventArgs e)
         {
             var props = e.GetCurrentPoint(this).Properties;
-
+            
             if (props.IsLeftButtonPressed)
             {
-                DragData.DragSource = this;
+                if (_tabControl.SelectedItem != null)
+                {
+                    var tabItem = (TabItem)_tabControl.SelectedItem;
+                    ContentViewModel content = new ContentViewModel();
+                    content.Content = tabItem.Content;
+                    content.Title = tabItem.Header as string;
+                    DragData.DragSource = this;
+                    DragData.DragContent = content;
+                }
                 e.Pointer.Capture(null);
-                System.Diagnostics.Debug.WriteLine($"Mouse down on {this._key}");
+                //System.Diagnostics.Debug.WriteLine($"Mouse down on {this._key}");
             }
         }
         
         private void MouseLeaveHandler(object? sender, PointerEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"Mouse leave on {this._key}");
+            //System.Diagnostics.Debug.WriteLine($"Mouse leave on {this._key}");
         }
         
         private void MouseEnterHandler(object? sender, PointerEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"Mouse enter on {this._key}");
+            //System.Diagnostics.Debug.WriteLine($"Mouse enter on {this._key}");
         }
         
         private void MouseMovedHandler(object? sender, PointerEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"Mouse move on {this._key}");
+            //System.Diagnostics.Debug.WriteLine($"Mouse move on {this._key}");
         }
         
         #endregion
@@ -492,7 +524,7 @@ namespace AvaloniaTestMVVM.Docking.View
         #region Static
 
         private static int _index;
-        
+
         public static ContentViewModel CreateRandomContent()
         {
             Random r = new Random();
