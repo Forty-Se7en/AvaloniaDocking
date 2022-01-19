@@ -329,14 +329,11 @@ namespace AvaloniaTestMVVM.Docking.View
                 var tabItem = (TabItem)_tabControl.SelectedItem;
                 var items = _tabControl.Items.Cast<object>().ToList();
                 items.Remove(tabItem);
+                _tabControl.Items = items;
 
                 if (items.Count == 0)
                 {
                     Close();
-                }
-                else
-                {
-                    _tabControl.Items = items;
                 }
             }
         }
@@ -377,7 +374,7 @@ namespace AvaloniaTestMVVM.Docking.View
         void DragDrop(LayoutPanel source, LayoutPanel target, ContentViewModel content)
         {
             source.RemoveActiveContent();
-            target.AddContent(content, EPosition.Center);
+            target.AddContent(content, EPosition.Right);
         }
         
         #endregion
