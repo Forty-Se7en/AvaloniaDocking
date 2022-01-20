@@ -66,34 +66,39 @@
                    Grid.Row="0" Grid.Column="1" 
                    Source="../../Assets/img/DockAnchorableTop.png"
                    PointerEnter="LocationImage_OnPointerEnter" 
-                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+                   PointerLeave="LocationImage_OnPointerLeave"
+                   PointerReleased="LocationImage_OnPointerReleased"></Image>
             
             <Image x:Name="ImageLeft" 
                    Margin="3"
                    Grid.Row="1" Grid.Column="0" 
                    Source="../../Assets/img/DockAnchorableLeft.png"
                    PointerEnter="LocationImage_OnPointerEnter" 
-                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+                   PointerLeave="LocationImage_OnPointerLeave"
+                   PointerReleased="LocationImage_OnPointerReleased"></Image>
             
             <Image x:Name="ImageCenter" 
                    Grid.Row="1" Grid.Column="1" 
                    Source="../../Assets/img/DockDocumentInside.png"
                    PointerEnter="LocationImage_OnPointerEnter" 
-                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+                   PointerLeave="LocationImage_OnPointerLeave"
+                   PointerReleased="LocationImage_OnPointerReleased"></Image>
             
             <Image x:Name="ImageRight" 
                    Margin="3"
                    Grid.Row="1" Grid.Column="2" 
                    Source="../../Assets/img/DockAnchorableRight.png"
                    PointerEnter="LocationImage_OnPointerEnter" 
-                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+                   PointerLeave="LocationImage_OnPointerLeave"
+                   PointerReleased="LocationImage_OnPointerReleased"></Image>
             
             <Image x:Name="ImageBottom" 
                    Margin="3"
                    Grid.Row="2" Grid.Column="1" 
                    Source="../../Assets/img/DockAnchorableBottom.png"
                    PointerEnter="LocationImage_OnPointerEnter" 
-                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+                   PointerLeave="LocationImage_OnPointerLeave"
+                   PointerReleased="LocationImage_OnPointerReleased"></Image>
             
         </Grid>
         

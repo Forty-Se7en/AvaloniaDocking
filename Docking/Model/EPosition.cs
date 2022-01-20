@@ -1,8 +1,8 @@
 namespace AvaloniaTestMVVM.Docking.Model
 {
-    public enum EPosition
+    public enum ELocation
     {
         None = -1,
-        Center, Left, Top, Right, Bottom
+        Inside, Left, Top, Right, Bottom
     }
 }

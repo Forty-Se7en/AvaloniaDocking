@@ -95,7 +95,7 @@ namespace AvaloniaTestMVVM.Docking.View
             if (content is ContentViewModel contentViewModel)
             {
                 AddTabControl();
-                AddContent(contentViewModel, EPosition.Center);
+                AddContent(contentViewModel, ELocation.Inside);
             }
 
             AddContextMenu();
@@ -112,20 +112,20 @@ namespace AvaloniaTestMVVM.Docking.View
         #region Methods
 
         /// <summary> Добавляет контент </summary>
-        void AddContent(ContentViewModel content, EPosition position)
+        void AddContent(ContentViewModel content, ELocation position)
         {
             switch (position)
             {
                 default: throw new Exception("Не задано положение для закрепления элемента");
-                case EPosition.Center:
+                case ELocation.Inside:
                     InsertContent(content);
                     break;
-                case EPosition.Left:
-                case EPosition.Right:
+                case ELocation.Left:
+                case ELocation.Right:
                     SplitHorizontal(new LayoutPanel(content), position);
                     break;
-                case EPosition.Top:
-                case EPosition.Bottom:
+                case ELocation.Top:
+                case ELocation.Bottom:
                     SplitVertical(new LayoutPanel(content), position);
                     break;
             }
@@ -163,31 +163,31 @@ namespace AvaloniaTestMVVM.Docking.View
                 {
                     Header = "Добавить внутрь",
                     Command = ReactiveCommand.Create(
-                        () => { this.AddContent(CreateRandomContent(), EPosition.Center); })
+                        () => { this.AddContent(CreateRandomContent(), ELocation.Inside); })
                 },
                 new MenuItem()
                 {
                     Header = "Добавить слева", 
                     Command = ReactiveCommand.Create(
-                        () => { this.AddContent(CreateRandomContent(), EPosition.Left); })
+                        () => { this.AddContent(CreateRandomContent(), ELocation.Left); })
                 },
                 new MenuItem()
                 {
                     Header = "Добавить справа", 
                     Command = ReactiveCommand.Create(
-                        () => { this.AddContent(CreateRandomContent(), EPosition.Right); })
+                        () => { this.AddContent(CreateRandomContent(), ELocation.Right); })
                 },
                 new MenuItem()
                 {
                     Header = "Добавить сверху", 
                     Command = ReactiveCommand.Create(
-                        () => { this.AddContent(CreateRandomContent(), EPosition.Top); })
+                        () => { this.AddContent(CreateRandomContent(), ELocation.Top); })
                 },
                 new MenuItem()
                 {
                     Header = "Добавить снизу", 
                     Command = ReactiveCommand.Create(
-                        () => { this.AddContent(CreateRandomContent(), EPosition.Bottom); })
+                        () => { this.AddContent(CreateRandomContent(), ELocation.Bottom); })
                 },
                 new MenuItem()
                     { Header = "Удалить", Command = ReactiveCommand.Create(RemoveActiveContent) }
@@ -199,23 +199,23 @@ namespace AvaloniaTestMVVM.Docking.View
 
         }
        
-        void SplitVertical(LayoutPanel panel, EPosition position)
+        void SplitVertical(LayoutPanel panel, ELocation position)
         {
             if (IsSplitted) return;
-            if (position != EPosition.Bottom && position != EPosition.Top) return;
+            if (position != ELocation.Bottom && position != ELocation.Top) return;
             
             _mainGrid.Children.Remove(_contentGrid);
             _mainGrid.Children.Clear();
 
             LayoutPanel topChild = null, bottomChild = null;
 
-            if (position == EPosition.Top)
+            if (position == ELocation.Top)
             {
                 // topChild = new LayoutPanel(content);
                 topChild = panel;
                 bottomChild = new LayoutPanel(_contentGrid);
             }
-            else if (position == EPosition.Bottom)
+            else if (position == ELocation.Bottom)
             {
                 // bottomChild = new LayoutPanel(content);
                 bottomChild = panel;
@@ -261,23 +261,23 @@ namespace AvaloniaTestMVVM.Docking.View
             this.RemoveEvents();
         }
 
-        void SplitHorizontal(LayoutPanel panel, EPosition position)
+        void SplitHorizontal(LayoutPanel panel, ELocation position)
         {
             if (IsSplitted) return;
-            if (position != EPosition.Left && position != EPosition.Right) return;
+            if (position != ELocation.Left && position != ELocation.Right) return;
 
             _mainGrid.Children.Remove(_contentGrid);
             _mainGrid.Children.Clear();
             
             LayoutPanel leftChild = null, rightChild = null;
 
-            if (position == EPosition.Left)
+            if (position == ELocation.Left)
             {
                 // leftChild = new LayoutPanel(content);
                 leftChild = panel;
                 rightChild = new LayoutPanel(_contentGrid);
             }
-            else if (position == EPosition.Right)
+            else if (position == ELocation.Right)
             {
                 // rightChild = new LayoutPanel(content);
                 rightChild = panel;
@@ -375,7 +375,7 @@ namespace AvaloniaTestMVVM.Docking.View
         void DragDrop(LayoutPanel source, LayoutPanel target, ContentViewModel content)
         {
             source.RemoveActiveContent();
-            target.AddContent(content, EPosition.Right);
+            target.AddContent(content, ELocation.Right);
         }
         
         #endregion
