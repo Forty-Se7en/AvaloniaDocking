@@ -35,6 +35,7 @@ namespace AvaloniaTestMVVM.Docking.View
         private Label _label;
         //private ContentViewModel _content;
         private string _key;
+        private LocationControl _locationControl;
 
         private ContentViewModel _content;
         
@@ -111,7 +112,7 @@ namespace AvaloniaTestMVVM.Docking.View
         #region Methods
 
         /// <summary> Добавляет контент </summary>
-        public void AddContent(ContentViewModel content, EPosition position)
+        void AddContent(ContentViewModel content, EPosition position)
         {
             switch (position)
             {
@@ -504,11 +505,20 @@ namespace AvaloniaTestMVVM.Docking.View
         private void MouseLeaveHandler(object? sender, PointerEventArgs e)
         {
             //System.Diagnostics.Debug.WriteLine($"Mouse leave on {this._key}");
+            if (_locationControl != null)
+            {
+                _mainGrid.Children.Remove(_locationControl);
+            }
         }
         
         private void MouseEnterHandler(object? sender, PointerEventArgs e)
         {
             //System.Diagnostics.Debug.WriteLine($"Mouse enter on {this._key}");
+            if (_locationControl == null)
+            {
+                _locationControl = new LocationControl();
+            }
+            _mainGrid.Children.Add(_locationControl);
         }
         
         private void MouseMovedHandler(object? sender, PointerEventArgs e)

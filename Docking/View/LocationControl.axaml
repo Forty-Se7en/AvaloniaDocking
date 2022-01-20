@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:converters="clr-namespace:AvaloniaTestMVVM.Views.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AvaloniaTestMVVM.Docking.View.LocationControl">
     
@@ -9,8 +10,92 @@
         <Binding RelativeSource="{RelativeSource Self}"></Binding>
     </UserControl.DataContext>
     
+    <UserControl.Resources>
+        <converters:BitmapValueConverter x:Key="bitmapConverter"/>
+    </UserControl.Resources>
+    
+    <UserControl.Styles>
+        <Style Selector="Panel.locationPanel">
+            <Setter Property="Background" Value="Blue"></Setter>
+            <Setter Property="IsVisible" Value="False"></Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <!--
     <Grid RowDefinitions="*,*" ColumnDefinitions="*,*">
         <Rectangle x:Name="RectLeft" Grid.Row="0" Grid.Column="0"></Rectangle>
-    </Grid>
+    </Grid>-->
     
+    <Grid>
+        
+        <Grid x:Name = "PanelsGrid"
+              Opacity="0.2"
+              RowDefinitions="*, *" 
+              ColumnDefinitions="*, *">
+            
+            <Panel x:Name="PanelTop"
+                   Classes="locationPanel"
+                       Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"></Panel>
+            
+            <Panel x:Name="PanelLeft"
+                   Classes="locationPanel"
+                   Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"></Panel>
+            
+            <Panel x:Name="PanelCenter"
+                   Classes="locationPanel"
+                   Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="2"></Panel>
+            
+            <Panel x:Name="PanelRight"
+                   Classes="locationPanel"
+                   Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"></Panel>
+            
+            <Panel x:Name="PanelBottom"
+                   Classes="locationPanel"
+                   Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"></Panel>
+        
+        </Grid>
+        
+        <Grid x:Name="ImagesGrid"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              RowDefinitions="Auto, Auto, Auto" 
+              ColumnDefinitions="Auto,Auto,Auto">
+            
+            <Image x:Name="ImageTop" 
+                   Margin="3"
+                   Grid.Row="0" Grid.Column="1" 
+                   Source="../../Assets/img/DockAnchorableTop.png"
+                   PointerEnter="LocationImage_OnPointerEnter" 
+                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+            
+            <Image x:Name="ImageLeft" 
+                   Margin="3"
+                   Grid.Row="1" Grid.Column="0" 
+                   Source="../../Assets/img/DockAnchorableLeft.png"
+                   PointerEnter="LocationImage_OnPointerEnter" 
+                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+            
+            <Image x:Name="ImageCenter" 
+                   Grid.Row="1" Grid.Column="1" 
+                   Source="../../Assets/img/DockDocumentInside.png"
+                   PointerEnter="LocationImage_OnPointerEnter" 
+                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+            
+            <Image x:Name="ImageRight" 
+                   Margin="3"
+                   Grid.Row="1" Grid.Column="2" 
+                   Source="../../Assets/img/DockAnchorableRight.png"
+                   PointerEnter="LocationImage_OnPointerEnter" 
+                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+            
+            <Image x:Name="ImageBottom" 
+                   Margin="3"
+                   Grid.Row="2" Grid.Column="1" 
+                   Source="../../Assets/img/DockAnchorableBottom.png"
+                   PointerEnter="LocationImage_OnPointerEnter" 
+                   PointerLeave="LocationImage_OnPointerLeave"></Image>
+            
+        </Grid>
+        
+    </Grid>
 </UserControl>
