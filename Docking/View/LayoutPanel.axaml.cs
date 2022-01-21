@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -460,6 +461,10 @@ namespace AvaloniaTestMVVM.Docking.View
         {
             if (DragData.IsMousePressed && DragData.DragSource != null)
             {
+                if (DragData.DragSource == this && location == ELocation.Inside)
+                {
+                    return;
+                }
                 DragData.DragTarget = this;
                 DragDrop(DragData.DragSource, DragData.DragTarget, DragData.DragContent, location);
             }
@@ -541,7 +546,14 @@ namespace AvaloniaTestMVVM.Docking.View
             // {
             //     _locationControl = new LocationControl();
             // }
-            if (DragData.IsMousePressed && DragData.DragSource != null) _mainGrid.Children.Add(_locationControl);
+            if (DragData.IsMousePressed && DragData.DragSource != null)
+            {
+                if (DragData.DragSource == this)
+                {
+                    if (((IEnumerable<object>)(_tabControl.Items)).Count() < 2) return;
+                }
+                _mainGrid.Children.Add(_locationControl);
+            }
         }
         
         private void MouseMovedHandler(object? sender, PointerEventArgs e)
