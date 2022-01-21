@@ -81,7 +81,10 @@ namespace AvaloniaTestMVVM.Docking.View
 
         private void LocationImage_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
         {
-            LocationSelected?.Invoke(_panels[sender as Image].Location);
+            if (e.InitialPressMouseButton == MouseButton.Left)
+            {
+                LocationSelected?.Invoke(_panels[sender as Image].Location);
+            }
         }
     }
 

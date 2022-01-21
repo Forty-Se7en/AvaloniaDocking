@@ -97,11 +97,15 @@ namespace AvaloniaTestMVVM.Docking.View
                 AddTabControl();
                 AddContent(contentViewModel, ELocation.Inside);
             }
+            
+            _locationControl = new LocationControl();
+            _locationControl.LocationSelected += OnLocationSelected;
 
             AddContextMenu();
             AddEvents();
         }
 
+        
         public LayoutPanel()
         {
             InitializeComponent();
@@ -134,7 +138,7 @@ namespace AvaloniaTestMVVM.Docking.View
         void AddTabControl(TabControl tabControl = null)
         {
             if (tabControl == null)
-                tabControl = new TabControl() {Name = "tabControl"};
+                tabControl = new TabControl() {Name = "tabControl", TabStripPlacement = Dock.Bottom};
             _tabControl = tabControl;
             _contentGrid.Children.Add(_tabControl);
         }
@@ -149,7 +153,7 @@ namespace AvaloniaTestMVVM.Docking.View
             items.Add(tabItem);
 
             _tabControl.Items = items;
-
+            _tabControl.SelectedItem = tabItem;
         }
 
         void AddContextMenu()
@@ -372,10 +376,10 @@ namespace AvaloniaTestMVVM.Docking.View
             AvaloniaXamlLoader.Load(this);
         }
 
-        void DragDrop(LayoutPanel source, LayoutPanel target, ContentViewModel content)
+        void DragDrop(LayoutPanel source, LayoutPanel target, ContentViewModel content, ELocation location)
         {
             source.RemoveActiveContent();
-            target.AddContent(content, ELocation.Right);
+            target.AddContent(content, location);
         }
         
         #endregion
@@ -452,34 +456,15 @@ namespace AvaloniaTestMVVM.Docking.View
             new FloatingWindow(sender).Show();
         }
 
-        private void MouseUpHandler(object? sender, PointerReleasedEventArgs e)
+        private void OnLocationSelected(ELocation location)
         {
-            //System.Diagnostics.Debug.Write("Mouse pressed: ");
-            switch (e.InitialPressMouseButton)
+            if (DragData.IsMousePressed && DragData.DragSource != null)
             {
-                case MouseButton.Left:
-                    if (DragData.DragSource != this)
-                    {
-                        DragData.DragTarget = this;
-                        DragDrop(DragData.DragSource, DragData.DragTarget, DragData.DragContent);
-                    }
-                    else
-                    {
-                        DragData.DragSource = null;
-                    }
-                        
-                    System.Diagnostics.Debug.WriteLine($"Mouse up on {this._key}");
-                    //this.SplitHorizontal(); 
-                    break;
-                case MouseButton.Right: 
-                    //System.Diagnostics.Debug.WriteLine("RIGHT");
-                    //this.SplitVertical(); 
-                    break;
-                case MouseButton.Middle: 
-                    //System.Diagnostics.Debug.WriteLine("MIDDLE");
-                    //this.Close();
-                    break;
+                DragData.DragTarget = this;
+                DragDrop(DragData.DragSource, DragData.DragTarget, DragData.DragContent, location);
             }
+            
+            
         }
         
         private void MouseDownHandler(object? sender, PointerPressedEventArgs e)
@@ -495,6 +480,7 @@ namespace AvaloniaTestMVVM.Docking.View
                     content.Content = tabItem.Content;
                     content.Title = tabItem.Header as string;
                     DragData.DragSource = this;
+                    DragData.IsMousePressed = true;
                     DragData.DragContent = content;
                 }
                 e.Pointer.Capture(null);
@@ -502,10 +488,46 @@ namespace AvaloniaTestMVVM.Docking.View
             }
         }
         
+        private void MouseUpHandler(object? sender, PointerReleasedEventArgs e)
+        {
+            //System.Diagnostics.Debug.Write("Mouse pressed: ");
+            switch (e.InitialPressMouseButton)
+            {
+                case MouseButton.Left:
+                    DragData.DragSource = null;
+                    DragData.IsMousePressed = false;
+                    if (_mainGrid.Children.Contains(_locationControl))
+                    {
+                        _mainGrid.Children.Remove(_locationControl);
+                    }
+                    // if (DragData.DragSource != this)
+                    // {
+                    //     DragData.DragTarget = this;
+                    //     DragDrop(DragData.DragSource, DragData.DragTarget, DragData.DragContent);
+                    // }
+                    // else
+                    // {
+                    //     DragData.DragSource = null;
+                    // }
+                        
+                    //System.Diagnostics.Debug.WriteLine($"Mouse up on {this._key}");
+                    //this.SplitHorizontal(); 
+                    break;
+                case MouseButton.Right: 
+                    //System.Diagnostics.Debug.WriteLine("RIGHT");
+                    //this.SplitVertical(); 
+                    break;
+                case MouseButton.Middle: 
+                    //System.Diagnostics.Debug.WriteLine("MIDDLE");
+                    //this.Close();
+                    break;
+            }
+        }
+        
         private void MouseLeaveHandler(object? sender, PointerEventArgs e)
         {
             //System.Diagnostics.Debug.WriteLine($"Mouse leave on {this._key}");
-            if (_locationControl != null)
+            if (_mainGrid.Children.Contains(_locationControl))
             {
                 _mainGrid.Children.Remove(_locationControl);
             }
@@ -514,11 +536,12 @@ namespace AvaloniaTestMVVM.Docking.View
         private void MouseEnterHandler(object? sender, PointerEventArgs e)
         {
             //System.Diagnostics.Debug.WriteLine($"Mouse enter on {this._key}");
-            if (_locationControl == null)
-            {
-                _locationControl = new LocationControl();
-            }
-            _mainGrid.Children.Add(_locationControl);
+            
+            // if (_locationControl == null)
+            // {
+            //     _locationControl = new LocationControl();
+            // }
+            if (DragData.IsMousePressed && DragData.DragSource != null) _mainGrid.Children.Add(_locationControl);
         }
         
         private void MouseMovedHandler(object? sender, PointerEventArgs e)
